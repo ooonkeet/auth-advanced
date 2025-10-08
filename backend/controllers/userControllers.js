@@ -1,5 +1,8 @@
+import { verifyMail } from "../email/verifyMail.js"
 import { User } from "../models/userModels.js"
 import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
+import 'dotenv/config'
 
 export const registerUser=async(req,res)=>{
     try {
@@ -19,6 +22,10 @@ export const registerUser=async(req,res)=>{
         }
         const hashedPassword=await bcrypt.hash(password,10)
         const newUser=await User.create({username,email,password:hashedPassword})
+        const token=jwt.sign({id:newUser._id},process.env.SECRET_KEY,{expiresIn:"10m"})
+        verifyMail(token,email)
+        newUser.token=token
+        await newUser.save()
         return res.status(201).json({
             success:true,
             message:"User created successfully",
