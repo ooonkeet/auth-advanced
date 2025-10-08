@@ -3,6 +3,7 @@ import { User } from "../models/userModels.js"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import 'dotenv/config'
+import { Session } from "../models/sessionModels.js"
 
 export const registerUser=async(req,res)=>{
     try {
@@ -77,6 +78,61 @@ export const verification=async(req,res)=>{
             success:true,
             message:"Email verified successfully."
         })
+    } catch (error) {
+        return res.status(500).json({
+            success:false,
+            message:error.message
+        })
+    }
+}
+export const loginUser=async(req,res)=>{
+    try {
+        const {email,password}=req.body
+        if(!email || !password){
+            return res.status(400).json({
+                success:false,
+                message:"All fields are required"
+            })
+        }
+            const user=await User.findOne({email})
+            if(!user){
+                return res.status(401).json({
+                    success:false,
+                    message:"Unauthorized access."
+                })
+            }
+            const passCheck=await bcrypt.compare(password,user.password)
+            if(!passCheck){
+                return res.status(402).json({
+                    success:false,
+                    message:"Incorrect Password."
+                })
+            }
+            if(!user.isVerified){
+                return res.status(403).json({
+                    success:false,
+                    message:"Please verify your email. Then log in."
+                })
+            }
+            //existing session check and deletion
+           const existingSession=await Session.findOne({userId:user._id})
+           if(existingSession){
+            await existingSession.deleteOne({userId:user._id})
+           }
+           //create a new session
+           await Session.create({userId:user._id})
+           //generate tokens
+           const accessToken=jwt.sign({id:user._id},process.env.SECRET_KEY,{expiresIn:"10d"})
+           const refreshToken=jwt.sign({id:user._id},process.env.SECRET_KEY,{expiresIn:"30d"})
+           user.isLogin=true
+           await user.save()
+           return res.status(200).json({
+            success:true,
+            message:`Welcome back ${user.username}`,
+            accessToken,
+            refreshToken,
+            data:user
+           })
     } catch (error) {
         return res.status(500).json({
             success:false,
