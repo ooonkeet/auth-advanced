@@ -39,7 +39,7 @@ const Register = () => {
                 }
             })
             if(res.data.success){
-                navigate('/login')
+                navigate('/verify')
                 toast.success(res.data.message)
             }else{
                 toast.error(res.data.message)
