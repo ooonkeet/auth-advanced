@@ -122,7 +122,7 @@ const Register = () => {
         <Button onClick={handleSubmit} type="submit" className="w-full bg-green-600 hover:bg-green-500">
           {
             loading?(<>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin'/>' Creating Account...
+                <Loader2 className='mr-2 h-4 w-4 animate-spin'/> Creating Account...
             </>):"Sign up"
           }
         </Button>
