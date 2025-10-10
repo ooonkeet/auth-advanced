@@ -1,22 +1,25 @@
-import jwt from "jsonwebtoken"
-import 'dotenv/config'
-import { User } from "../models/userModels.js"
-export const isAuthenticated=async(req,res,next)=>{
+import jwt from 'jsonwebtoken'
+import { User } from '../models/userModels.js';
+
+export const isAuthenticated = async(req, res, next) =>{
     try {
-        const authHeader=req.headers.authorization
-        if(!authHeader||!authHeader.startsWith("Bearer ")){
+        const authHeader = req.headers.authorization;
+
+        if(!authHeader || !authHeader.startsWith('Bearer ')){
             return res.status(401).json({
                 success:false,
-                message:"Access token is missing or invalid."
+                message:'Access token is missing or invalid'
             })
         }
-        const token=authHeader.split(" ")[1]
-        jwt.verify(token,process.env.SECRET_KEY,async(err,decoded) =>{
+
+        const token = authHeader.split(" ")[1]
+
+        jwt.verify(token, process.env.SECRET_KEY, async (err, decoded)=>{
             if(err){
-                if(err.name==="TokenExpiredError"){
+                if(err.name === "TokenExpiredError"){
                     return res.status(400).json({
                         success:false,
-                        message:"The access token has expired. Use refreshToken to generate a new one."
+                        message:"Access Token has expired, use refreshtoken to generate again"
                     })
                 }
                 return res.status(400).json({
@@ -24,15 +27,17 @@ export const isAuthenticated=async(req,res,next)=>{
                     message:"Access token is missing or invalid"
                 })
             }
-            const {id}=decoded
-            const user=await User.findById(id)
+            const {id} = decoded;
+
+            const user = await User.findById(id)
             if(!user){
                 return res.status(404).json({
                     success:false,
-                    message:"User not found."
+                    message:"user not found"
                 })
             }
-            req.userId=user._id
+
+            req.userId = user._id  
             next()
         })
     } catch (error) {
